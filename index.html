@@ -55,23 +55,12 @@
 					this.ticker = ticker;
 				}
 				this.spriteList = [];
-				
 				this.gravity = 0.25;
-				
-				//////////////////////////////////////////////////////////////////
-				//TESTTTTTTTTTTTT                                               //
-				//////////////////////////////////////////////////////////////////
-				var s = layer.Sprite('img/test/star.png');
-				s.move(0, 0);
-				s.update();
-				//////////////////////////////////////////////////////////////////
-				//TESTTTTTTTTTTTT                                               //
-				//////////////////////////////////////////////////////////////////
 				
 				//////////////////////////////////////////////////////////////////
 				//Create our player                                             //
 				//////////////////////////////////////////////////////////////////
-				this.player = this.scene.Sprite("img/Bunny.png", {
+				this.player = this.scene.Sprite("img/BunnyVer1.000.png", {
 					"layer": this.layer,
 					"x": 100,
 					"y": 100,
@@ -145,7 +134,7 @@
 				//////////////////////////////////////////////////////////////////
 				//Create our test player                                        //
 				//////////////////////////////////////////////////////////////////
-				this.player2 = this.scene.Sprite("img/BunnyVer1.000.png", {
+				this.player2 = this.scene.Sprite("img/Bunny.png", {
 					"layer": this.layer,
 					"x": 150,
 					"y": 100,
@@ -251,7 +240,7 @@
 						sprite.moveDown();
 					}
 					else {
-						if(!(sprite.canVertical)) {
+						if(sprite.canVertical) {
 							if(sprite.yv != 0) {
 								if(sprite.yFriction != 0) {
 									_applyFriction(sprite, 1);
@@ -436,6 +425,16 @@
 						}
 					}
 				}
+				
+				//////////////////////////////////////////////////////////////////
+				//TESTTTTTTTTTTTT                                               //
+				//////////////////////////////////////////////////////////////////
+				var s = layer.Sprite('img/test/star.png');
+				s.move(0, 0);
+				s.update();
+				//////////////////////////////////////////////////////////////////
+				//TESTTTTTTTTTTTT                                               //
+				//////////////////////////////////////////////////////////////////
 				
 				//////////////////////////////////////////////////////////////////
 				//How to handle mouse click                                     //
