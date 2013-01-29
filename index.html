@@ -100,7 +100,7 @@
 				this.player.yInc = 0.5;
 				this.player.xFriction = 0.5;
 				this.player.yFriction = 0.5;
-				this.player.canFly = true;
+				this.player.canVertical = true;
 				this.player.hasLanded = false;
 				this.player.jumpVelocity = -2;
 				
@@ -174,7 +174,7 @@
 				this.player2.yInc = 0.5;
 				this.player2.xFriction = 0.5;
 				this.player2.yFriction = 0.5;
-				this.player2.canFly = false;
+				this.player2.canVertical = false;
 				this.player2.hasLanded = false;
 				this.player2.jumpVelocity = -2;
 				
@@ -251,7 +251,7 @@
 						sprite.moveDown();
 					}
 					else {
-						if(!(sprite.canFly)) {
+						if(!(sprite.canVertical)) {
 							if(sprite.yv != 0) {
 								if(sprite.yFriction != 0) {
 									_applyFriction(sprite, 1);
@@ -333,7 +333,7 @@
 				//How to jump up                                                //
 				//////////////////////////////////////////////////////////////////
 				_jumpUp = function(sprite) {
-					if(!(this.canFly)) {
+					if(!(this.canVertical)) {
 						if(sprite.selected && sprite.hasLanded) {
 							sprite.hasLanded = false;
 							sprite.setVelocity(sprite.xv, sprite.jumpVelocity);
@@ -394,7 +394,7 @@
 				//How to apply gravity                                          //
 				//////////////////////////////////////////////////////////////////
 				_applyGravity = function(sprite) {
-					if(!(sprite.canFly)) {
+					if(!(sprite.canVertical)) {
 						if(!(sprite.hasLanded)) {
 							sprite.addVelocity(0, that.gravity);
 						}
@@ -490,7 +490,7 @@
 					for (var i in that.spriteList) {
 						_updateMovement(that.spriteList[i]);
 						
-						if(!(that.spriteList[i].canFly)) {
+						if(!(that.spriteList[i].canVertical)) {
 							_applyGravity(that.spriteList[i]);
 						}
 						
