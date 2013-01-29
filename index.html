@@ -99,7 +99,7 @@
 				this.hero.updateAll = function() {
 					if(this.selected && that.inputs.keyboard.up && this.hasLanded) {
 						this.hasLanded = false;
-						this.setVelocity(this.xv, -5);
+						this.setVelocity(this.xv, -3);
 					}
 					else{
 						
@@ -174,10 +174,6 @@
 					this.update();
 				}
 				
-				if(this.inputs.keyboard.t) {
-					alert(this.hero.yv);
-				}
-				
 				//////////////////////////////////////////////////////////////////
 				//Create our test hero                                          //
 				//////////////////////////////////////////////////////////////////
@@ -189,38 +185,58 @@
 					"h": 64,
 					"angle": 0,
 					"xv": 0,
+					"yv": 0,
 					"friction": 0.1
 				});
 				
 				this.testHero.direction = 1; //0 - up, 1 - right, 2 - down, 3 - left
+				this.hero.hasLanded = false;
 				this.testHero.selected = false;
 				
 				this.testHero.updateAll = function() {
+					if(this.selected && that.inputs.keyboard.up && this.hasLanded) {
+						this.hasLanded = false;
+						this.setVelocity(this.xv, -5);
+					}
+					else{
+						
+					}
 					if(this.selected && that.inputs.keyboard.left) {
 						this.direction = 3;
 						this.rotate(-0.1);
 						if(this.xv > -5) {
-							this.addVelocity(-0.5);
+							this.addVelocity(-0.5, 0);
 						}
 					}
-					else{
-						if(this.xv < 0) {
-							this.rotate(-0.1);
-							this.addVelocity(this.friction);
-						}
-					}
-					if(this.selected && that.inputs.keyboard.right) {
+					else if(this.selected && that.inputs.keyboard.right) {
 						this.direction = 1;
 						this.rotate(0.1);
 						if(this.xv < 5) {
-							this.addVelocity(0.5);
+							this.addVelocity(0.5, 0);
 						}
 					}
-					else{
-						if(this.xv > 0) {
-							this.rotate(0.1);
-							this.addVelocity(this.friction * -1);
+					else {
+						if(this.direction == 1) {
+							if(this.xv > 0) {
+								this.rotate(0.1);
+								this.addVelocity(this.friction * -1, 0);
+							}
+							else {
+								this.setVelocity(0, this.yv);
+							}
 						}
+						else if(this.direction == 3) {
+							if(this.xv < 0) {
+								this.rotate(-0.1);
+								this.addVelocity(this.friction, 0);
+							}
+							else {
+								this.setVelocity(0, this.yv);
+							}
+						}
+					}
+					if(!(this.hasLanded)) {
+						this.addVelocity(0, that.gravity);
 					}
 					
 					//Out of bounds check
@@ -234,6 +250,14 @@
 					}
 					else{
 						this.setX(this.x + this.xv);
+					}
+					if((this.yv > 0) && (((this.y + this.yv) + this.h) > this.layer.h)) {
+						this.hasLanded = true;
+						this.setVelocity(this.xv, 0);
+						this.setY(this.layer.h - this.h);
+					}
+					else{
+						this.setY(this.y + this.yv);
 					}
 					
 					this.update();
