@@ -81,6 +81,7 @@
 				this.player.xDirection = 3; //2 - left, 3 - right
 				this.player.yDirection = 1; //0 - up, 1 - down
 				this.player.canRun = false;
+				this.player.canRoll = false;
 				this.player.constXv = 2;
 				this.player.constYv = 2;
 				this.player.maxXv = 5;
@@ -89,6 +90,8 @@
 				this.player.yInc = 0.5;
 				this.player.xFriction = 0.5;
 				this.player.yFriction = 0.5;
+				this.player.rollAng = 0;
+				this.player.maxRollAng = 0.1;
 				this.player.canVertical = true;
 				this.player.hasLanded = false;
 				this.player.jumpVelocity = -2;
@@ -155,14 +158,17 @@
 				this.player2.xDirection = 3; //2 - left, 3 - right
 				this.player2.yDirection = 1; //0 - up, 1 - down
 				this.player2.canRun = true;
+				this.player2.canRoll = true;
 				this.player2.constXv = 2;
 				this.player2.constYv = 2;
 				this.player2.maxXv = 5;
 				this.player2.maxYv = 5;
 				this.player2.xInc = 0.5;
 				this.player2.yInc = 0.5;
-				this.player2.xFriction = 0.5;
-				this.player2.yFriction = 0.5;
+				this.player2.xFriction = 0.25;
+				this.player2.yFriction = 0.25;
+				this.player2.rollAng = 0;
+				this.player2.maxRollAng = 0.1;
 				this.player2.canVertical = false;
 				this.player2.hasLanded = false;
 				this.player2.jumpVelocity = -2;
@@ -182,13 +188,11 @@
 				
 				this.player2.moveLeft = function() {
 					if(this.selected) {
-						this.rotate(1);
 						_moveLeft(this);
 					}
 				}
 				this.player2.moveRight = function() {
 					if(this.selected) {
-						this.rotate(-1);
 						_moveRight(this);
 					}
 				}
@@ -216,10 +220,8 @@
 						sprite.moveRight();
 					}
 					else {
-						if(sprite.xv != 0) {
-							if(sprite.xFriction != 0) {
-								_applyFriction(sprite, 0);
-							}
+						if(sprite.xFriction != 0) {
+							_applyFriction(sprite, 0);
 						}
 						
 						//Update sprite
@@ -241,10 +243,8 @@
 					}
 					else {
 						if(sprite.canVertical) {
-							if(sprite.yv != 0) {
-								if(sprite.yFriction != 0) {
-									_applyFriction(sprite, 1);
-								}
+							if(sprite.yFriction != 0) {
+								_applyFriction(sprite, 1);
 							}
 						}
 					}
@@ -255,9 +255,18 @@
 				//////////////////////////////////////////////////////////////////
 				_moveLeft = function(sprite) {
 					sprite.lastDirection = 2;
-					sprite.direction = 2;
+					sprite.xDirection = 2;
 					sprite.walkingLeft.next();
 					if(sprite.canRun) {
+						if(sprite.canRoll) {
+							if(sprite.rollAng > (sprite.maxRollAng * -1)) {
+								sprite.rollAng = sprite.rollAng - 0.01;
+							}
+							sprite.rotate(sprite.rollAng);
+						}
+						else {
+							sprite.setAngle(0);
+						}
 						if(sprite.xv > sprite.maxXv * -1) {
 							sprite.addVelocity(sprite.xInc * -1, 0);
 						}
@@ -272,9 +281,18 @@
 				//////////////////////////////////////////////////////////////////
 				_moveRight = function(sprite) {
 					sprite.lastDirection = 3;
-					sprite.direction = 3;
+					sprite.xDirection = 3;
 					sprite.walkingRight.next();
 					if(sprite.canRun) {
+						if(sprite.canRoll) {
+							if(sprite.rollAng < sprite.maxRollAng) {
+								sprite.rollAng = sprite.rollAng + 0.01;
+							}
+							sprite.rotate(sprite.rollAng);
+						}
+						else {
+							sprite.setAngle(0);
+						}
 						if(sprite.xv < sprite.maxXv) {
 							sprite.addVelocity(sprite.xInc, 0);
 						}
@@ -289,7 +307,7 @@
 				//////////////////////////////////////////////////////////////////
 				_moveUp = function(sprite) {
 					sprite.lastDirection = 0;
-					sprite.direction = 0;
+					sprite.yDirection = 0;
 					//sprite.walkingUp.next();
 					if(sprite.canRun) {
 						if(sprite.yv > sprite.maxYv * -1) {
@@ -306,7 +324,7 @@
 				//////////////////////////////////////////////////////////////////
 				_moveDown = function(sprite) {
 					sprite.lastDirection = 1;
-					sprite.direction = 1;
+					sprite.yDirection = 1;
 					//sprite.walkingDown.next();
 					if(sprite.canRun) {
 						if(sprite.yv < sprite.maxYv) {
@@ -338,20 +356,34 @@
 						//Plane 0 for horizontal friction
 						if(sprite.xDirection == 2) {
 							if(sprite.xv < 0) {
+								if(sprite.canRoll) {
+									if(sprite.rollAng > 0) {
+										sprite.rollAng = sprite.rollAng + 0.01;
+									}
+									sprite.rotate(sprite.rollAng);
+								}
 								sprite.walkingLeft.next();
 								sprite.addVelocity(sprite.xFriction, 0);
 							}
 							else {
 								sprite.setVelocity(0, sprite.yv);
+								sprite.rollAng = 0;
 							}
 						}
 						else if(sprite.xDirection == 3) {
 							if(sprite.xv > 0) {
+								if(sprite.canRoll) {
+									if(sprite.rollAng < 0) {
+										sprite.rollAng = sprite.rollAng - 0.01;
+									}
+									sprite.rotate(sprite.rollAng);
+								}
 								sprite.walkingRight.next();
 								sprite.addVelocity(sprite.xFriction * -1, 0);
 							}
 							else {
 								sprite.setVelocity(0, sprite.yv);
+								sprite.rollAng = 0;
 							}
 						}
 					}
