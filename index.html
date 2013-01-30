@@ -8,6 +8,8 @@
 		Created by Allice, Eddie, Ngoc, John
 
 		Special thanks to Batiste Bieler and contributors for Sprite.js and more
+		
+		All rights and permissions reserved to Che Chan.
 
 		-->
 		<title>
@@ -32,7 +34,10 @@
 				'img/cat.png',
 				'img/giraffe.png',
 				'img/turtle.png',
-				'img/Bunny.png'
+				'img/Bunny.png',
+				'img/AllyIcon01.png',
+				'img/old_master.png',
+				'img/old_master_big.png',
 				],
 				function() {
 					engine = new Engine(scene, layer);
@@ -69,14 +74,12 @@
 					"angle": 0,
 					"xv": 0,
 					"yv": 0,
+					"rv": 0,
 					"friction": 0.5
 				});
 				
-				//Player properties
-				this.player.npc = false;
-				this.player.selected = true;
-				
 				//Common properties
+				this.player.isNPC = false;
 				this.player.lastDirection = 1; //2 - left, 3 - right, 0 - up, 1 - down
 				this.player.xDirection = 3; //2 - left, 3 - right
 				this.player.yDirection = 1; //0 - up, 1 - down
@@ -86,15 +89,17 @@
 				this.player.constYv = 2;
 				this.player.maxXv = 5;
 				this.player.maxYv = 5;
+				this.player.maxRv = 0.1;
 				this.player.xInc = 0.5;
 				this.player.yInc = 0.5;
 				this.player.xFriction = 0.5;
 				this.player.yFriction = 0.5;
-				this.player.rollAng = 0;
-				this.player.maxRollAng = 0.1;
 				this.player.canVertical = true;
 				this.player.hasLanded = false;
 				this.player.jumpVelocity = -2;
+				
+				//Player properties
+				this.player.selected = true;
 				
 				this.player.standingLeft = scene.Cycle([
 					[0, 0, 5]
@@ -146,14 +151,12 @@
 					"angle": 0,
 					"xv": 0,
 					"yv": 0,
+					"rv": 0,
 					"friction": 0.25
 				});
 				
-				//Player properties
-				this.player2.npc = false;
-				this.player2.selected = false;
-				
 				//Common properties
+				this.player2.isNPC = false;
 				this.player2.lastDirection = 1; //2 - left, 3 - right, 0 - up, 1 - down
 				this.player2.xDirection = 3; //2 - left, 3 - right
 				this.player2.yDirection = 1; //0 - up, 1 - down
@@ -163,15 +166,17 @@
 				this.player2.constYv = 2;
 				this.player2.maxXv = 5;
 				this.player2.maxYv = 5;
+				this.player2.maxRv = 0.1;
 				this.player2.xInc = 0.5;
 				this.player2.yInc = 0.5;
 				this.player2.xFriction = 0.25;
 				this.player2.yFriction = 0.25;
-				this.player2.rollAng = 0;
-				this.player2.maxRollAng = 0.1;
 				this.player2.canVertical = false;
 				this.player2.hasLanded = false;
 				this.player2.jumpVelocity = -2;
+				
+				//Player properties
+				this.player2.selected = false;
 				
 				this.player2.standingLeft = scene.Cycle([
 					[0, 0, 5]
@@ -215,40 +220,49 @@
 				//How to update movement                                        //
 				//////////////////////////////////////////////////////////////////
 				_updateMovement = function(sprite) {
-					if(that.inputs.keyboard.left) {
-						sprite.moveLeft();
-					}
-					else if(that.inputs.keyboard.right) {
-						sprite.moveRight();
+					if(sprite.isNPC) {
+						sprite.move();
 					}
 					else {
-						if(sprite.xFriction != 0) {
-							_applyFriction(sprite, 0);
+						if(that.inputs.keyboard.left) {
+							sprite.moveLeft();
+						}
+						else if(that.inputs.keyboard.right) {
+							sprite.moveRight();
+						}
+						else {
+							if(sprite.xFriction != 0) {
+								_applyFriction(sprite, 0);
+							}
+							
+							//Update sprite
+							if(sprite.xv == 0) {
+								if(sprite.xDirection == 2) {
+									sprite.standingLeft.next();
+								}
+								else if(sprite.xDirection == 3) {
+									sprite.standingRight.next();
+								}
+							}
 						}
 						
-						//Update sprite
-						if(sprite.xv == 0) {
-							if(sprite.xDirection == 2) {
-								sprite.standingLeft.next();
-							}
-							else if(sprite.xDirection == 3) {
-								sprite.standingRight.next();
+						if(that.inputs.keyboard.up) {
+							sprite.moveUp();
+						}
+						else if(that.inputs.keyboard.down) {
+							sprite.moveDown();
+						}
+						else {
+							if(sprite.canVertical) {
+								if(sprite.yFriction != 0) {
+									_applyFriction(sprite, 1);
+								}
 							}
 						}
 					}
 					
-					if(that.inputs.keyboard.up) {
-						sprite.moveUp();
-					}
-					else if(that.inputs.keyboard.down) {
-						sprite.moveDown();
-					}
-					else {
-						if(sprite.canVertical) {
-							if(sprite.yFriction != 0) {
-								_applyFriction(sprite, 1);
-							}
-						}
+					if(!(sprite.canVertical)) {
+						_applyGravity(sprite);
 					}
 				}
 				
@@ -261,10 +275,10 @@
 					sprite.walkingLeft.next();
 					if(sprite.canRun) {
 						if(sprite.canRoll) {
-							if(sprite.rollAng > (sprite.maxRollAng * -1)) {
-								sprite.rollAng = sprite.rollAng - 0.01;
+							if(sprite.rv > (sprite.maxRv * -1)) {
+								sprite.rv = sprite.rv - 0.01;
 							}
-							sprite.rotate(sprite.rollAng);
+							sprite.rotate(sprite.rv);
 						}
 						else {
 							sprite.setAngle(0);
@@ -287,10 +301,10 @@
 					sprite.walkingRight.next();
 					if(sprite.canRun) {
 						if(sprite.canRoll) {
-							if(sprite.rollAng < sprite.maxRollAng) {
-								sprite.rollAng = sprite.rollAng + 0.01;
+							if(sprite.rv < sprite.maxRv) {
+								sprite.rv = sprite.rv + 0.01;
 							}
-							sprite.rotate(sprite.rollAng);
+							sprite.rotate(sprite.rv);
 						}
 						else {
 							sprite.setAngle(0);
@@ -339,6 +353,29 @@
 				}
 				
 				//////////////////////////////////////////////////////////////////
+				//How to move randomly                                          //
+				//////////////////////////////////////////////////////////////////
+				_moveRandomly = function(sprite) {
+					var rand = Math.floor(Math.random()*4);
+					if(rand == 0) {
+						if(sprite.canVertical) {
+							_moveUp(sprite);
+						}
+					}
+					else if(rand == 1) {
+						if(sprite.canVertical) {
+							_moveDown(sprite);
+						}
+					}
+					else if(rand == 2) {
+						_moveLeft(sprite);
+					}
+					else {
+						_moveRight(sprite);
+					}
+				}
+				
+				//////////////////////////////////////////////////////////////////
 				//How to jump up                                                //
 				//////////////////////////////////////////////////////////////////
 				_jumpUp = function(sprite) {
@@ -359,33 +396,33 @@
 						if(sprite.xDirection == 2) {
 							if(sprite.xv < 0) {
 								if(sprite.canRoll) {
-									if(sprite.rollAng > 0) {
-										sprite.rollAng = sprite.rollAng + 0.01;
+									if(sprite.rv > 0) {
+										sprite.rv = sprite.rv + 0.01;
 									}
-									sprite.rotate(sprite.rollAng);
+									sprite.rotate(sprite.rv);
 								}
 								sprite.walkingLeft.next();
 								sprite.addVelocity(sprite.xFriction, 0);
 							}
 							else {
 								sprite.setVelocity(0, sprite.yv);
-								sprite.rollAng = 0;
+								sprite.rv = 0;
 							}
 						}
 						else if(sprite.xDirection == 3) {
 							if(sprite.xv > 0) {
 								if(sprite.canRoll) {
-									if(sprite.rollAng < 0) {
-										sprite.rollAng = sprite.rollAng - 0.01;
+									if(sprite.rv < 0) {
+										sprite.rv = sprite.rv - 0.01;
 									}
-									sprite.rotate(sprite.rollAng);
+									sprite.rotate(sprite.rv);
 								}
 								sprite.walkingRight.next();
 								sprite.addVelocity(sprite.xFriction * -1, 0);
 							}
 							else {
 								sprite.setVelocity(0, sprite.yv);
-								sprite.rollAng = 0;
+								sprite.rv = 0;
 							}
 						}
 					}
@@ -417,10 +454,8 @@
 				//How to apply gravity                                          //
 				//////////////////////////////////////////////////////////////////
 				_applyGravity = function(sprite) {
-					if(!(sprite.canVertical)) {
-						if(!(sprite.hasLanded)) {
-							sprite.addVelocity(0, that.gravity);
-						}
+					if(!(sprite.hasLanded)) {
+						sprite.addVelocity(0, that.gravity);
 					}
 				}
 				
@@ -454,8 +489,10 @@
 					}
 					else{
 						sprite.setY(sprite.y + sprite.yv);
-						if(!(sprite.canRun)) {
-							sprite.setVelocity(sprite.xv, 0);
+						if(sprite.canVertical) {
+							if(!(sprite.canRun)) {
+								sprite.setVelocity(sprite.xv, 0);
+							}
 						}
 					}
 				}
@@ -510,9 +547,63 @@
 				//////////////////////////////////////////////////////////////////
 				//Create NPC                                                    //
 				//////////////////////////////////////////////////////////////////
-				_createNPC = function() {
+				_createNPC = function(img, x, y) {
+					NPC = that.scene.Sprite(img, {
+						"layer": that.layer,
+						"x": x,
+						"y": y,
+						//"w": 64,
+						//"h": 64,
+						//"angle": 0,
+						"xv": 0,
+						"yv": 0,
+						"friction": 0.5
+					});
 					
+					//Common properties
+					NPC.isNPC = true;
+					NPC.lastDirection = 1; //2 - left, 3 - right, 0 - up, 1 - down
+					NPC.xDirection = 3; //2 - left, 3 - right
+					NPC.yDirection = 1; //0 - up, 1 - down
+					NPC.canRun = false;
+					NPC.canRoll = false;
+					NPC.constXv = 2;
+					NPC.constYv = 2;
+					NPC.maxXv = 5;
+					NPC.maxYv = 5;
+					NPC.xInc = 0.5;
+					NPC.yInc = 0.5;
+					NPC.xFriction = 0.5;
+					NPC.yFriction = 0.5;
+					NPC.rollAng = 0;
+					NPC.maxRollAng = 0.1;
+					NPC.canVertical = false;
+					NPC.hasLanded = false;
+					NPC.jumpVelocity = -2;
+					
+					NPC.standingLeft = scene.Cycle([
+						[0, 0, 5]
+					]).addSprite(NPC);
+					NPC.standingRight = scene.Cycle([
+						[0, 0, 5]
+					]).addSprite(NPC);
+					NPC.walkingLeft = scene.Cycle([
+						[0, 0, 5],
+						[64, 64, 5]
+					]).addSprite(NPC);
+					NPC.walkingRight = scene.Cycle([
+						[0, 0, 5],
+						[64, 64, 5]
+					]).addSprite(NPC);
+					
+					NPC.move = function() {
+						_moveRandomly(this);
+					}
+					
+					that.spriteList.push(this.NPC);
 				}
+				
+				_createNPC('img/BIG_BUNNY.png', 200, 100);
 				
 				//////////////////////////////////////////////////////////////////
 				//Create run method which will be called each time the          //
@@ -522,10 +613,6 @@
 					//Update and Paint all images
 					for (var i in that.spriteList) {
 						_updateMovement(that.spriteList[i]);
-						
-						if(!(that.spriteList[i].canVertical)) {
-							_applyGravity(that.spriteList[i]);
-						}
 						
 						_fixBounds(that.spriteList[i]);
 						
