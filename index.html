@@ -75,6 +75,8 @@
 					"xv": 0,
 					"yv": 0,
 					"rv": 0,
+					"xf": 0.5,
+					"yf": 0.5,
 					"friction": 0.5
 				});
 				
@@ -92,8 +94,6 @@
 				this.player.maxRv = 0.1;
 				this.player.xInc = 0.5;
 				this.player.yInc = 0.5;
-				this.player.xFriction = 0.5;
-				this.player.yFriction = 0.5;
 				this.player.canVertical = true;
 				this.player.hasLanded = false;
 				this.player.jumpVelocity = -2;
@@ -152,6 +152,8 @@
 					"xv": 0,
 					"yv": 0,
 					"rv": 0,
+					"xf": 0.25,
+					"yf": 0.25,
 					"friction": 0.25
 				});
 				
@@ -169,8 +171,6 @@
 				this.player2.maxRv = 0.1;
 				this.player2.xInc = 0.5;
 				this.player2.yInc = 0.5;
-				this.player2.xFriction = 0.25;
-				this.player2.yFriction = 0.25;
 				this.player2.canVertical = false;
 				this.player2.hasLanded = false;
 				this.player2.jumpVelocity = -2;
@@ -231,7 +231,7 @@
 							sprite.moveRight();
 						}
 						else {
-							if(sprite.xFriction != 0) {
+							if(sprite.xf != 0) {
 								_applyFriction(sprite, 0);
 							}
 							
