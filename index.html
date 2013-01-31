@@ -94,7 +94,7 @@
 				this.player.maxRv = 0.1;
 				this.player.xInc = 0.5;
 				this.player.yInc = 0.5;
-				this.player.canVertical = true;
+				this.player.canMove3D = true;
 				this.player.hasLanded = false;
 				this.player.jumpVelocity = -2;
 				
@@ -116,24 +116,28 @@
 					[64, 64, 5]
 				]).addSprite(this.player);
 				
-				this.player.moveLeft = function() {
-					if(this.selected) {
-						_moveLeft(this);
-					}
-				}
-				this.player.moveRight = function() {
-					if(this.selected) {
-						_moveRight(this);
-					}
-				}
 				this.player.moveUp = function() {
 					if(this.selected) {
+						//this.walkingUp.next();
 						_moveUp(this);
 					}
 				}
 				this.player.moveDown = function() {
 					if(this.selected) {
+						//this.walkingDown.next();
 						_moveDown(this);
+					}
+				}
+				this.player.moveLeft = function() {
+					if(this.selected) {
+						this.walkingLeft.next();
+						_moveLeft(this);
+					}
+				}
+				this.player.moveRight = function() {
+					if(this.selected) {
+						this.walkingRight.next();
+						_moveRight(this);
 					}
 				}
 				
@@ -171,7 +175,7 @@
 				this.player2.maxRv = 0.1;
 				this.player2.xInc = 0.5;
 				this.player2.yInc = 0.5;
-				this.player2.canVertical = false;
+				this.player2.canMove3D = false;
 				this.player2.hasLanded = false;
 				this.player2.jumpVelocity = -2;
 				
@@ -193,16 +197,6 @@
 					[64, 64, 5]
 				]).addSprite(this.player2);
 				
-				this.player2.moveLeft = function() {
-					if(this.selected) {
-						_moveLeft(this);
-					}
-				}
-				this.player2.moveRight = function() {
-					if(this.selected) {
-						_moveRight(this);
-					}
-				}
 				this.player2.moveUp = function() {
 					if(this.selected) {
 						_jumpUp(this);
@@ -210,7 +204,20 @@
 				}
 				this.player2.moveDown = function() {
 					if(this.selected) {
+						//this.walkingDown.next();
 						
+					}
+				}
+				this.player2.moveLeft = function() {
+					if(this.selected) {
+						this.walkingLeft.next();
+						_moveLeft(this);
+					}
+				}
+				this.player2.moveRight = function() {
+					if(this.selected) {
+						this.walkingRight.next();
+						_moveRight(this);
 					}
 				}
 				
@@ -224,6 +231,20 @@
 						sprite.move();
 					}
 					else {
+						if(that.inputs.keyboard.up) {
+							sprite.moveUp();
+						}
+						else if(that.inputs.keyboard.down) {
+							sprite.moveDown();
+						}
+						else {
+							if(sprite.canMove3D) {
+								if(sprite.yf != 0) {
+									_applyYFriction(sprite);
+								}
+							}
+						}
+						
 						if(that.inputs.keyboard.left) {
 							sprite.moveLeft();
 						}
@@ -232,37 +253,79 @@
 						}
 						else {
 							if(sprite.xf != 0) {
-								_applyFriction(sprite, 0);
-							}
-							
-							//Update sprite
-							if(sprite.xv == 0) {
-								if(sprite.xDirection == 2) {
-									sprite.standingLeft.next();
-								}
-								else if(sprite.xDirection == 3) {
-									sprite.standingRight.next();
-								}
+								_applyXFriction(sprite);
 							}
 						}
 						
-						if(that.inputs.keyboard.up) {
-							sprite.moveUp();
-						}
-						else if(that.inputs.keyboard.down) {
-							sprite.moveDown();
-						}
-						else {
-							if(sprite.canVertical) {
-								if(sprite.yFriction != 0) {
-									_applyFriction(sprite, 1);
-								}
+						if(sprite.xv == 0) {
+							if(sprite.lastDirection == 0) {
+								
+							}
+							else if(sprite.lastDirection == 1) {
+								
+							}
+							else if(sprite.lastDirection == 2) {
+								sprite.standingLeft.next();
+							}
+							else if(sprite.lastDirection == 3) {
+								sprite.standingRight.next();
 							}
 						}
 					}
 					
-					if(!(sprite.canVertical)) {
+					if(!(sprite.canMove3D)) {
 						_applyGravity(sprite);
+					}
+					
+					if(sprite.canRoll) {
+						sprite.rotate(sprite.rv);
+					}
+					
+					_fixBoundPositions(sprite);
+					
+					sprite.applyVelocity(1);
+					
+					if(sprite.canMove3D) {
+						if(!(sprite.canRun)) {
+							sprite.setVelocity(0, 0);
+						}
+					}
+					else {
+						if(!(sprite.canRun)) {
+							sprite.setVelocity(0, sprite.yv);
+						}
+					}
+				}
+				
+				//////////////////////////////////////////////////////////////////
+				//How to generally move up                                      //
+				//////////////////////////////////////////////////////////////////
+				_moveUp = function(sprite) {
+					sprite.lastDirection = 0;
+					sprite.yDirection = 0;
+					if(sprite.canRun) {
+						if(sprite.yv > sprite.maxYv * -1) {
+							sprite.addVelocity(0, sprite.yInc * -1);
+						}
+					}
+					else {
+						sprite.yv = Math.abs(sprite.constYv) * -1;
+					}
+				}
+				
+				//////////////////////////////////////////////////////////////////
+				//How to generally move down                                    //
+				//////////////////////////////////////////////////////////////////
+				_moveDown = function(sprite) {
+					sprite.lastDirection = 1;
+					sprite.yDirection = 1;
+					if(sprite.canRun) {
+						if(sprite.yv < sprite.maxYv) {
+							sprite.addVelocity(0, sprite.yInc);
+						}
+					}
+					else {
+						sprite.yv = Math.abs(sprite.constYv);
 					}
 				}
 				
@@ -272,7 +335,6 @@
 				_moveLeft = function(sprite) {
 					sprite.lastDirection = 2;
 					sprite.xDirection = 2;
-					sprite.walkingLeft.next();
 					if(sprite.canRun) {
 						if(sprite.canRoll) {
 							if(sprite.rv > (sprite.maxRv * -1)) {
@@ -298,7 +360,6 @@
 				_moveRight = function(sprite) {
 					sprite.lastDirection = 3;
 					sprite.xDirection = 3;
-					sprite.walkingRight.next();
 					if(sprite.canRun) {
 						if(sprite.canRoll) {
 							if(sprite.rv < sprite.maxRv) {
@@ -319,51 +380,17 @@
 				}
 				
 				//////////////////////////////////////////////////////////////////
-				//How to generally move up                                      //
-				//////////////////////////////////////////////////////////////////
-				_moveUp = function(sprite) {
-					sprite.lastDirection = 0;
-					sprite.yDirection = 0;
-					//sprite.walkingUp.next();
-					if(sprite.canRun) {
-						if(sprite.yv > sprite.maxYv * -1) {
-							sprite.addVelocity(0, sprite.yInc * -1);
-						}
-					}
-					else {
-						sprite.yv = Math.abs(sprite.constYv) * -1;
-					}
-				}
-				
-				//////////////////////////////////////////////////////////////////
-				//How to generally move down                                    //
-				//////////////////////////////////////////////////////////////////
-				_moveDown = function(sprite) {
-					sprite.lastDirection = 1;
-					sprite.yDirection = 1;
-					//sprite.walkingDown.next();
-					if(sprite.canRun) {
-						if(sprite.yv < sprite.maxYv) {
-							sprite.addVelocity(0, sprite.yInc);
-						}
-					}
-					else {
-						sprite.yv = Math.abs(sprite.constYv);
-					}
-				}
-				
-				//////////////////////////////////////////////////////////////////
 				//How to move randomly                                          //
 				//////////////////////////////////////////////////////////////////
 				_moveRandomly = function(sprite) {
 					var rand = Math.floor(Math.random()*4);
 					if(rand == 0) {
-						if(sprite.canVertical) {
+						if(sprite.canMove3D) {
 							_moveUp(sprite);
 						}
 					}
 					else if(rand == 1) {
-						if(sprite.canVertical) {
+						if(sprite.canMove3D) {
 							_moveDown(sprite);
 						}
 					}
@@ -379,8 +406,8 @@
 				//How to jump up                                                //
 				//////////////////////////////////////////////////////////////////
 				_jumpUp = function(sprite) {
-					if(!(this.canVertical)) {
-						if(sprite.selected && sprite.hasLanded) {
+					if(!(this.canMove3D)) {
+						if(sprite.hasLanded) {
 							sprite.hasLanded = false;
 							sprite.setVelocity(sprite.xv, sprite.jumpVelocity);
 						}
@@ -388,64 +415,59 @@
 				}
 				
 				//////////////////////////////////////////////////////////////////
-				//How to apply friction                                         //
+				//How to apply horizontal X friction                            //
 				//////////////////////////////////////////////////////////////////
-				_applyFriction = function(sprite, plane) {
-					if(plane == 0) {
-						//Plane 0 for horizontal friction
-						if(sprite.xDirection == 2) {
-							if(sprite.xv < 0) {
-								if(sprite.canRoll) {
-									if(sprite.rv > 0) {
-										sprite.rv = sprite.rv + 0.01;
-									}
-									sprite.rotate(sprite.rv);
+				_applyXFriction = function(sprite) {
+					if(sprite.xDirection == 2) {
+						if(sprite.xv < 0) {
+							if(sprite.canRoll) {
+								if(sprite.rv > 0) {
+									sprite.rv = sprite.rv + 0.01;
 								}
-								sprite.walkingLeft.next();
-								sprite.addVelocity(sprite.xFriction, 0);
 							}
-							else {
-								sprite.setVelocity(0, sprite.yv);
-								sprite.rv = 0;
-							}
+							sprite.addVelocity(sprite.xf, 0);
 						}
-						else if(sprite.xDirection == 3) {
-							if(sprite.xv > 0) {
-								if(sprite.canRoll) {
-									if(sprite.rv < 0) {
-										sprite.rv = sprite.rv - 0.01;
-									}
-									sprite.rotate(sprite.rv);
-								}
-								sprite.walkingRight.next();
-								sprite.addVelocity(sprite.xFriction * -1, 0);
-							}
-							else {
-								sprite.setVelocity(0, sprite.yv);
-								sprite.rv = 0;
-							}
+						else {
+							sprite.setVelocity(0, sprite.yv);
+							sprite.rv = 0;
 						}
 					}
-					
-					if(plane == 1) {
-						//Plane 1 for vertical friction
-						if(sprite.yDirection == 0) {
-							if(sprite.yv < 0) {
-								sprite.walkingLeft.next();
-								sprite.addVelocity(0, sprite.yFriction);
+					else if(sprite.xDirection == 3) {
+						if(sprite.xv > 0) {
+							if(sprite.canRoll) {
+								if(sprite.rv < 0) {
+									sprite.rv = sprite.rv - 0.01;
+								}
 							}
-							else {
-								sprite.setVelocity(sprite.xv, 0);
-							}
+							sprite.addVelocity(sprite.xf * -1, 0);
 						}
-						else if(sprite.yDirection == 1) {
-							if(sprite.yv > 0) {
-								sprite.walkingRight.next();
-								sprite.addVelocity(0, sprite.yFriction * -1);
-							}
-							else {
-								sprite.setVelocity(sprite.xv, 0);
-							}
+						else {
+							sprite.setVelocity(0, sprite.yv);
+							sprite.rv = 0;
+						}
+					}
+				}
+				
+				//////////////////////////////////////////////////////////////////
+				//How to apply vertical Y friction                              //
+				//////////////////////////////////////////////////////////////////
+				_applyYFriction = function(sprite) {
+					if(sprite.yDirection == 0) {
+						if(sprite.yv < 0) {
+							sprite.walkingLeft.next();
+							sprite.addVelocity(0, sprite.yFriction);
+						}
+						else {
+							sprite.setVelocity(sprite.xv, 0);
+						}
+					}
+					else if(sprite.yDirection == 1) {
+						if(sprite.yv > 0) {
+							sprite.walkingRight.next();
+							sprite.addVelocity(0, sprite.yFriction * -1);
+						}
+						else {
+							sprite.setVelocity(sprite.xv, 0);
 						}
 					}
 				}
@@ -460,9 +482,9 @@
 				}
 				
 				//////////////////////////////////////////////////////////////////
-				//How to fix out of bounds and update position                  //
+				//How to fix out of bounds                                      //
 				//////////////////////////////////////////////////////////////////
-				_fixBounds = function(sprite) {
+				_fixBoundPositions = function(sprite) {
 					if((sprite.xv < 0) && (sprite.x + sprite.xv) < 0) {
 						sprite.setVelocity(0, sprite.yv);
 						sprite.setX(0);
@@ -471,29 +493,17 @@
 						sprite.setVelocity(0, sprite.yv);
 						sprite.setX(sprite.layer.w - sprite.w);
 					}
-					else{
-						sprite.setX(sprite.x + sprite.xv);
-						if(!(sprite.canRun)) {
-							sprite.setVelocity(0, sprite.yv);
-						}
-					}
 					
 					if((sprite.yv < 0) && ((sprite.y + sprite.yv) < 0)) {
 						sprite.setVelocity(sprite.xv, 0);
 						sprite.setY(0);
 					}
 					else if((sprite.yv > 0) && (((sprite.y + sprite.yv) + sprite.h) > sprite.layer.h)) {
-						sprite.hasLanded = true;
+						if(!(sprite.canMove3D)) {
+							sprite.hasLanded = true;
+						}
 						sprite.setVelocity(sprite.xv, 0);
 						sprite.setY(sprite.layer.h - sprite.h);
-					}
-					else{
-						sprite.setY(sprite.y + sprite.yv);
-						if(sprite.canVertical) {
-							if(!(sprite.canRun)) {
-								sprite.setVelocity(sprite.xv, 0);
-							}
-						}
 					}
 				}
 				
@@ -577,7 +587,7 @@
 					NPC.yFriction = 0.5;
 					NPC.rollAng = 0;
 					NPC.maxRollAng = 0.1;
-					NPC.canVertical = false;
+					NPC.canMove3D = false;
 					NPC.hasLanded = false;
 					NPC.jumpVelocity = -2;
 					
@@ -613,8 +623,6 @@
 					//Update and Paint all images
 					for (var i in that.spriteList) {
 						_updateMovement(that.spriteList[i]);
-						
-						_fixBounds(that.spriteList[i]);
 						
 						that.spriteList[i].update();
 					}
