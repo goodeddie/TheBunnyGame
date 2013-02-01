@@ -114,6 +114,8 @@
 				this.player.friction_down = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
 				this.player.friction_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
 				this.player.friction_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
+				this.player.rolling_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
+				this.player.rolling_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
 				
 				this.player.moveUp = function() {
 					this.sprite_state = 4;
@@ -186,6 +188,8 @@
 				this.player2.friction_down = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
 				this.player2.friction_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
 				this.player2.friction_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
+				this.player2.rolling_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
+				this.player2.rolling_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
 				
 				this.player2.moveUp = function() {
 					this.sprite_state = 14;
@@ -234,8 +238,8 @@
 							}
 						}
 						
-						if(sprite.can_move_3D) {
-							if(sprite.yf != 0) {
+						if(sprite.yf != 0) {
+							if(sprite.can_move_3D) {
 								_applyYFriction(sprite);
 								if(sprite.y_dir == 0) {
 									if(sprite.yv == 0) {
@@ -285,10 +289,6 @@
 					_fixBoundPositions(sprite);
 					
 					sprite.applyVelocity(1);
-					
-					if(sprite.can_roll) {
-						sprite.rotate(sprite.rv);
-					}
 					
 					if(sprite.can_move_3D) {
 						if(!(sprite.can_run)) {
@@ -524,22 +524,21 @@
 				// HOW TO HANDLE SPRITE STATES                                  //
 				//                                                              //
 				// Sprite States                                                //
-				// 0 -		Standing up                                           //
-				// 1 -		Standing down                                         //
-				// 2 -		Standing left                                         //
-				// 3 -		Standing right                                        //
-				// 4 -		Moving up                                             //
-				// 5 -		Moving down                                           //
-				// 6 -		Moving left                                           //
-				// 7 -		Moving right                                          //
-				// 8 -		Friction up                                           //
-				// 9 -		Friction down                                         //
-				// 10 -		Friction left                                         //
-				// 11 -		Friction right                                        //
-				// 12 -		Rolling left                                          //
-				// 13 -		Rolling right                                         //
-				// 14 -		Jumping up                                            //
-				// 15 -		Falling down                                          //
+				// 0 -		Standing up                                         //
+				// 1 -		Standing down                                       //
+				// 2 -		Standing left                                       //
+				// 3 -		Standing right                                      //
+				// 4 -		Moving up                                           //
+				// 5 -		Moving down                                         //
+				// 6 -		Moving left                                         //
+				// 7 -		Moving right                                        //
+				// 8 -		Friction up                                         //
+				// 9 -		Friction down                                       //
+				// 10 -		Friction left                                       //
+				// 11 -		Friction right                                      //
+				// 12 -		Jumping up                                          //
+				// 13 -		Falling down                                        //
+				// 14 -		                                       //
 				//////////////////////////////////////////////////////////////////
 				_handleSpriteState = function(sprite) {
 					if(sprite.sprite_state == 0) {
@@ -549,10 +548,22 @@
 						sprite.standing_down.next();
 					}
 					else if(sprite.sprite_state == 2) {
-						sprite.standing_left.next();
+						if(sprite.can_roll) {
+							sprite.rotate(sprite.rv);
+							sprite.rolling_left.next();
+						}
+						else {
+							sprite.standing_left.next();
+						}
 					}
 					else if(sprite.sprite_state == 3) {
-						sprite.standing_right.next();
+						if(sprite.can_roll) {
+							sprite.rotate(sprite.rv);
+							sprite.rolling_right.next();
+						}
+						else {
+							sprite.standing_right.next();
+						}
 					}
 					else if(sprite.sprite_state == 4) {
 						sprite.moving_up.next();
@@ -579,15 +590,9 @@
 						sprite.friction_right.next();
 					}
 					else if(sprite.sprite_state == 12) {
-						sprite.rolling_left.next();
-					}
-					else if(sprite.sprite_state == 13) {
-						sprite.rolling_right.next();
-					}
-					else if(sprite.sprite_state == 14) {
 						sprite.jumping_up.next();
 					}
-					else if(sprite.sprite_state == 15) {
+					else if(sprite.sprite_state == 13) {
 						sprite.falling_down.next();
 					}
 					else {
@@ -652,6 +657,8 @@
 					NPC.friction_down = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
 					NPC.friction_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
 					NPC.friction_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
+					NPC.rolling_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
+					NPC.rolling_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
 					
 					NPC.move = function() {
 						_moveRandomly(this);
