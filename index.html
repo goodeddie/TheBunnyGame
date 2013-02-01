@@ -116,21 +116,19 @@
 				this.player.friction_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
 				this.player.rolling_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
 				this.player.rolling_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
+				this.player.jumping_up = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
+				this.player.falling_down = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player);
 				
 				this.player.moveUp = function() {
-					this.sprite_state = 4;
 					_moveUp(this);
 				}
 				this.player.moveDown = function() {
-					this.sprite_state = 5;
 					_moveDown(this);
 				}
 				this.player.moveLeft = function() {
-					this.sprite_state = 6;
 					_moveLeft(this);
 				}
 				this.player.moveRight = function() {
-					this.sprite_state = 7;
 					_moveRight(this);
 				}
 				
@@ -157,9 +155,9 @@
 				//Common properties
 				this.player2.is_NPC = false;
 				this.player2.sprite_state = 1;
-				this.player2.last_dir = 1; //2 - left, 3 - right, 0 - up, 1 - down
-				this.player2.x_dir = 3; //2 - left, 3 - right
-				this.player2.y_dir = 1; //0 - up, 1 - down
+				this.player2.last_dir = 1;
+				this.player2.x_dir = 3;
+				this.player2.y_dir = 1;
 				this.player2.can_run = true;
 				this.player2.can_roll = true;
 				this.player2.const_xv = 2;
@@ -190,21 +188,19 @@
 				this.player2.friction_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
 				this.player2.rolling_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
 				this.player2.rolling_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
+				this.player2.jumping_up = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
+				this.player2.falling_down = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(this.player2);
 				
 				this.player2.moveUp = function() {
-					this.sprite_state = 14;
 					_jumpUp(this);
 				}
 				this.player2.moveDown = function() {
-					//this.sprite_state = 5;
 					
 				}
 				this.player2.moveLeft = function() {
-					this.sprite_state = 6;
 					_moveLeft(this);
 				}
 				this.player2.moveRight = function() {
-					this.sprite_state = 7;
 					_moveRight(this);
 				}
 				
@@ -220,61 +216,54 @@
 					else {
 						if(sprite.selected) {
 							if(that.inputs.keyboard.up) {
-									sprite.moveUp();
-									this.sprite_state = 4;
+								sprite.moveUp();
 							}
 							else if(that.inputs.keyboard.down) {
 								sprite.moveDown();
-								this.sprite_state = 5;
 							}
 							
 							if(that.inputs.keyboard.left) {
 								sprite.moveLeft();
-								this.sprite_state = 6;
 							}						
 							else if(that.inputs.keyboard.right) {
 								sprite.moveRight();
-								this.sprite_state = 7;
 							}
 						}
 						
+						// Friction
 						if(sprite.yf != 0) {
 							if(sprite.can_move_3D) {
-								_applyYFriction(sprite);
-								if(sprite.y_dir == 0) {
-									if(sprite.yv == 0) {
-										this.sprite_state = 0;
-									}
-									else {
-										sprite.sprite_state = 8;
-									}
+								if(sprite.yv != 0) {
+									_applyYFriction(sprite);
 								}
-								else if(sprite.y_dir == 1) {
-									if(sprite.yv == 0) {
-										this.sprite_state = 1;
+								else {
+									if(sprite.y_dir == 0) {
+										sprite.sprite_state = 0;
 									}
-									else {
-										sprite.sprite_state = 9;
+									else if(sprite.y_dir == 1) {
+										sprite.sprite_state = 1;
 									}
+									
+									sprite.setVelocity(0, sprite.yv);
+									sprite.rv = 0;
 								}
 							}
 						}
 						if(sprite.xf != 0) {
-							_applyXFriction(sprite);
-							if(sprite.x_dir == 2) {
-								if(sprite.xv == 0) {
-									sprite.sprite_state = 2;
+							if(sprite.has_landed) {
+								if(sprite.xv != 0) {
+									_applyXFriction(sprite);
 								}
 								else {
-									sprite.sprite_state = 10;
-								}
-							}
-							else if(sprite.x_dir == 3) {
-								if(sprite.xv == 0) {
-									sprite.sprite_state = 3;
-								}
-								else {
-									sprite.sprite_state = 11;
+									if(sprite.x_dir == 2) {
+										sprite.sprite_state = 2;
+									}
+									else if(sprite.x_dir == 3) {
+										sprite.sprite_state = 3;
+									}
+									
+									sprite.setVelocity(0, sprite.yv);
+									sprite.rv = 0;
 								}
 							}
 						}
@@ -308,6 +297,7 @@
 				_moveUp = function(sprite) {
 					sprite.last_dir = 0;
 					sprite.y_dir = 0;
+					sprite.sprite_state = 0;
 					if(sprite.can_run) {
 						if(sprite.yv > sprite.max_yv * -1) {
 							sprite.addVelocity(0, sprite.y_inc * -1);
@@ -324,6 +314,7 @@
 				_moveDown = function(sprite) {
 					sprite.last_dir = 1;
 					sprite.y_dir = 1;
+					sprite.sprite_state = 1;
 					if(sprite.can_run) {
 						if(sprite.yv < sprite.max_yv) {
 							sprite.addVelocity(0, sprite.y_inc);
@@ -340,16 +331,19 @@
 				_moveLeft = function(sprite) {
 					sprite.last_dir = 2;
 					sprite.x_dir = 2;
+					sprite.sprite_state = 2;
 					if(sprite.can_run) {
 						if(sprite.can_roll) {
 							if(sprite.rv > (sprite.max_rv * -1)) {
 								sprite.rv = sprite.rv - 0.01;
 							}
+							sprite.sprite_state = 14;
 							sprite.rotate(sprite.rv);
 						}
 						else {
 							sprite.setAngle(0);
 						}
+						
 						if(sprite.xv > sprite.max_xv * -1) {
 							sprite.addVelocity(sprite.x_inc * -1, 0);
 						}
@@ -365,16 +359,19 @@
 				_moveRight = function(sprite) {
 					sprite.last_dir = 3;
 					sprite.x_dir = 3;
+					sprite.sprite_state = 3;
 					if(sprite.can_run) {
 						if(sprite.can_roll) {
 							if(sprite.rv < sprite.max_rv) {
 								sprite.rv = sprite.rv + 0.01;
 							}
+							sprite.sprite_state = 15;
 							sprite.rotate(sprite.rv);
 						}
 						else {
 							sprite.setAngle(0);
 						}
+						
 						if(sprite.xv < sprite.max_xv) {
 							sprite.addVelocity(sprite.x_inc, 0);
 						}
@@ -413,6 +410,7 @@
 				_jumpUp = function(sprite) {
 					if(!(this.can_move_3D)) {
 						if(sprite.has_landed) {
+							sprite.sprite_state = 14;
 							sprite.has_landed = false;
 							sprite.setVelocity(sprite.xv, sprite.jump_velocity);
 						}
@@ -423,7 +421,36 @@
 				// HOW TO APPLY VERTICAL Y FRICTION                             //
 				//////////////////////////////////////////////////////////////////
 				_applyYFriction = function(sprite) {
-					if(sprite.y_dir == 0) {
+					if(sprite.yv < 0) {
+						sprite.sprite_state = 8;
+						
+						if(sprite.y_dir == 0) {
+							sprite.addVelocity(0, sprite.yFriction);
+						}
+						else if(sprite.y_dir == 1) {
+							sprite.setVelocity(sprite.xv, 0);
+						}
+					}
+					else if(sprite.yv > 0) {
+						sprite.sprite_state = 9;
+						
+						if(sprite.y_dir == 1) {
+							sprite.addVelocity(0, sprite.yFriction * -1);
+						}
+						else if(sprite.y_dir == 0) {
+							sprite.setVelocity(sprite.xv, 0);
+						}
+					}
+					else {
+						if(sprite.y_dir == 0) {
+							this.sprite_state = 0;
+						}
+						else if(sprite.y_dir == 1) {
+							this.sprite_state = 1;
+						}
+					}
+				
+					/*if(sprite.y_dir == 0) {
 						if(sprite.yv < 0) {
 							sprite.addVelocity(0, sprite.yFriction);
 						}
@@ -438,37 +465,47 @@
 						else {
 							sprite.setVelocity(sprite.xv, 0);
 						}
-					}
+					}*/
 				}
 				
 				//////////////////////////////////////////////////////////////////
 				// HOW TO APPLY HORIZONTAL X FRICTION                           //
 				//////////////////////////////////////////////////////////////////
 				_applyXFriction = function(sprite) {
-					if(sprite.x_dir == 2) {
-						if(sprite.xv < 0) {
+					if(sprite.xv < 0) {
+						if(sprite.x_dir == 2) {
+							sprite.sprite_state = 10;
+							
 							if(sprite.can_roll) {
+								sprite.sprite_state = 14;
+								
 								if(sprite.rv > 0) {
-									sprite.rv = sprite.rv + 0.01;
+									sprite.rv = sprite.rv - 0.01;
 								}
 							}
 							sprite.addVelocity(sprite.xf, 0);
 						}
 						else {
+							sprite.sprite_state = 2;
 							sprite.setVelocity(0, sprite.yv);
 							sprite.rv = 0;
 						}
 					}
-					else if(sprite.x_dir == 3) {
-						if(sprite.xv > 0) {
+					else if(sprite.xv > 0) {
+						if(sprite.x_dir == 3) {
+							sprite.sprite_state = 11;
+							
 							if(sprite.can_roll) {
+								sprite.sprite_state = 15;
+								
 								if(sprite.rv < 0) {
-									sprite.rv = sprite.rv - 0.01;
+									sprite.rv = sprite.rv + 0.01;
 								}
 							}
 							sprite.addVelocity(sprite.xf * -1, 0);
 						}
 						else {
+							sprite.sprite_state = 3;
 							sprite.setVelocity(0, sprite.yv);
 							sprite.rv = 0;
 						}
@@ -524,21 +561,22 @@
 				// HOW TO HANDLE SPRITE STATES                                  //
 				//                                                              //
 				// Sprite States                                                //
-				// 0 -		Standing up                                         //
-				// 1 -		Standing down                                       //
-				// 2 -		Standing left                                       //
-				// 3 -		Standing right                                      //
-				// 4 -		Moving up                                           //
-				// 5 -		Moving down                                         //
-				// 6 -		Moving left                                         //
-				// 7 -		Moving right                                        //
-				// 8 -		Friction up                                         //
-				// 9 -		Friction down                                       //
-				// 10 -		Friction left                                       //
-				// 11 -		Friction right                                      //
-				// 12 -		Jumping up                                          //
-				// 13 -		Falling down                                        //
-				// 14 -		                                       //
+				// 0 -    Standing up                                           //
+				// 1 -    Standing down                                         //
+				// 2 -    Standing left                                         //
+				// 3 -    Standing right                                        //
+				// 4 -    Moving up                                             //
+				// 5 -    Moving down                                           //
+				// 6 -    Moving left                                           //
+				// 7 -    Moving right                                          //
+				// 8 -    Friction up                                           //
+				// 9 -    Friction down                                         //
+				// 10 -   Friction left                                         //
+				// 11 -   Friction right                                        //
+				// 12 -   Jumping up                                            //
+				// 13 -   Falling down                                          //
+				// 14 -   Rolling left                                          //
+				// 15 -   Rolling right                                          //
 				//////////////////////////////////////////////////////////////////
 				_handleSpriteState = function(sprite) {
 					if(sprite.sprite_state == 0) {
@@ -548,22 +586,10 @@
 						sprite.standing_down.next();
 					}
 					else if(sprite.sprite_state == 2) {
-						if(sprite.can_roll) {
-							sprite.rotate(sprite.rv);
-							sprite.rolling_left.next();
-						}
-						else {
-							sprite.standing_left.next();
-						}
+						sprite.standing_left.next();
 					}
 					else if(sprite.sprite_state == 3) {
-						if(sprite.can_roll) {
-							sprite.rotate(sprite.rv);
-							sprite.rolling_right.next();
-						}
-						else {
-							sprite.standing_right.next();
-						}
+						sprite.standing_right.next();
 					}
 					else if(sprite.sprite_state == 4) {
 						sprite.moving_up.next();
@@ -594,6 +620,14 @@
 					}
 					else if(sprite.sprite_state == 13) {
 						sprite.falling_down.next();
+					}
+					else if(sprite.sprite_state == 14) {
+						sprite.rotate(sprite.rv);
+						sprite.rolling_left.next();
+					}
+					else if(sprite.sprite_state == 15) {
+						sprite.rotate(sprite.rv);
+						sprite.rolling_right.next();
 					}
 					else {
 						//Sprite not found
@@ -629,7 +663,7 @@
 					//Common properties
 					NPC.is_NPC = true;
 					NPC.sprite_state = 1;
-					NPC.last_dir = 1; //2 - left, 3 - right, 0 - up, 1 - down
+					NPC.last_dir = 1; //0 - up, 1 - down, 2 - left, 3 - right
 					NPC.x_dir = 3; //2 - left, 3 - right
 					NPC.y_dir = 1; //0 - up, 1 - down
 					NPC.can_run = false;
@@ -659,6 +693,8 @@
 					NPC.friction_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
 					NPC.rolling_left = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
 					NPC.rolling_right = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
+					NPC.jumping_up = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
+					NPC.falling_down = scene.Cycle([[0, 0, 5],[64, 64, 5]]).addSprite(NPC);
 					
 					NPC.move = function() {
 						_moveRandomly(this);
